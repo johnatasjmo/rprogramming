@@ -1,0 +1,25 @@
+## https://stackoverflow.com/questions/7629896/how-to-calculate-days-since-moving-average-crossover?rq=1
+
+## This function will return the number of days since the Adjusted price crossed its moving average (zero on the day it crosses). The number of days will be a negative number if the current price is below the MA, and will be positive if the current price is above the MA.
+
+##x is an xts object with an Adjusted column, and n is the n to use for the SMA
+
+DaysSinceMACross <- function(x, n) {
+  prem <- Ad(x) - SMA(Ad(x), n) 
+  prem[seq_len(n)] <- 0        
+  x$grp <- cumsum(c(0, diff(prem > 0, na.pad=FALSE)) != 0)
+  x$sign <- sign(prem)
+  x$days <- ave(prem, x$grp, FUN=function(xx) 0:(NROW(xx) - 1))
+  x$days * x$sign 
+}
+
+x <-getSymbols(ticker, src='yahoo', to='2012-10-22', auto.assign = FALSE)
+
+R> tail(DaysSinceMACross(x, 10))
+#           days
+#2012-10-15   -5
+#2012-10-16    0
+#2012-10-17    1
+#2012-10-18    0
+#2012-10-19   -1
+#2012-10-22   -2
